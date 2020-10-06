@@ -183,7 +183,27 @@ export default async (sessionToken, profile, providerAccount, options) => {
           // We don't want to have two accounts with the same email address, and we don't
           // want to link them in case it's not safe to do so, so instead we prompt the user
           // to sign in via email to verify their identity and then link the accounts.
-          throw new AccountNotLinkedError()
+          // throw new AccountNotLinkedError()
+          user = userByEmail;
+
+          await linkAccount(
+            user.id,
+            providerAccount.provider,
+            providerAccount.type,
+            providerAccount.id,
+            providerAccount.refreshToken,
+            providerAccount.accessToken,
+            providerAccount.accessTokenExpires
+          )
+          await dispatchEvent(events.linkAccount, { user, providerAccount })
+
+          session = useJwtSession ? {} : await createSession(user)
+          isNewUser = false
+          return {
+            session,
+            user,
+            isNewUser
+          }
         } else {
           // If the current user is not logged in and the profile isn't linked to any user
           // accounts (by email or provider account id)...
