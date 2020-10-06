@@ -155,7 +155,19 @@ var _default = function () {
           var _userByEmail = profile.email ? yield getUserByEmail(profile.email) : null;
 
           if (_userByEmail) {
-            throw new _errors.AccountNotLinkedError();
+            user = _userByEmail;
+            yield linkAccount(user.id, providerAccount.provider, providerAccount.type, providerAccount.id, providerAccount.refreshToken, providerAccount.accessToken, providerAccount.accessTokenExpires);
+            yield (0, _dispatchEvent.default)(events.linkAccount, {
+              user,
+              providerAccount
+            });
+            session = useJwtSession ? {} : yield createSession(user);
+            isNewUser = false;
+            return {
+              session,
+              user,
+              isNewUser
+            };
           } else {
             user = yield createUser(profile);
             yield (0, _dispatchEvent.default)(events.createUser, user);
